@@ -1,0 +1,125 @@
+{% extends "Image_Style_Transfer_AI/header.html" %}
+{% load widget_tweaks %}
+{% load static %}
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <br/>
+                <h1>Image Style Transfer</h1>
+                <h2>Dashboard</h2>
+                <br/>
+                <nav>
+                  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                    <a class="nav-item nav-link active" id="nav-create-art-tab" data-toggle="tab" href="#nav-create-art" role="tab" aria-controls="nav-create-art" aria-selected="true">Create Art</a>
+                    <a class="nav-item nav-link" id="nav-view-art-tab" data-toggle="tab" href="#nav-view-art" role="tab" aria-controls="nav-view-art" aria-selected="false">View My Art [{{ art.count }}]</a>
+                    <a class="nav-item nav-link ui-corner-right" href="./logout" aria-controls="nav-logout" aria-selected="false">Logout</a>
+                  </div>
+                </nav>
+                 <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-create-art" role="tabpanel" aria-labelledby="nav-create-art-tab">
+                        <br/>
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="flex">
+                                <div class="form-group text-center">
+                                    <label for="id_image_one">First Image</label>
+                                    {% render_field form.image_one  class+="form-control image-input" %}
+                                    <br/>
+                                    <i class="fas fa-plus"></i>
+                                    <br/><br/>
+                                    <label for="id_image_two">Second Image</label>
+                                    {% render_field form.image_two  class+="form-control image-input" %}
+                                </div>
+                            </div>
+                            <br/>
+                            <div class="text-center">
+                                <input type="submit" value="Generate art">
+                            </div>
+                        </form>
+                    </div>
+                     <div class="tab-pane fade" id="nav-view-art" role="tabpanel" aria-labelledby="nav-view-art-tab">
+                        <div class="row">
+                            <div class="col-4 text-center">
+                                <h3>Image A</h3>
+                            </div>
+                            <div class="col-4 text-center">
+                                <h3>Image B</h3>
+                            </div>
+                            <div class="col-4 text-center">
+                                <h3>result</h3>
+                            </div>
+                        </div>
+                        {% for a in art %}
+                            <div class="row">
+                                <div class="col-4 center">
+                                    {% if a.image_one %}<img width="100%" height="auto" src="{{ a.image_one.url }}"/>{% endif %}
+                                </div>
+                                <div class="col-4 center">
+                                    {% if a.image_two %}<img width="100%" height="auto" src="{{ a.image_two.url }}"/>{% endif %}
+                                </div>
+                                <div class="col-4 center">
+
+                                    {% if a.image_output %}<img width="100%" height="auto" src="{{ a.image_output.url }}"/>
+                                    {% else %}
+                                        <img width="100%" height="auto" src="{% static "img/placeholder.jpg" %}"/>
+                                    {% endif %}
+
+                                </div>
+                            </div>
+                            <hr/>
+                        {% endfor %}
+                     </div>
+                 </div>
+                {% if form.errors %}
+                    <br>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div id="myModal" class="modal">
+
+      <!-- The Close Button -->
+      <span class="close">&times;</span>
+
+      <!-- Modal Content (The Image) -->
+      <img class="modal-content" id="img01" />
+
+      <!-- Modal Caption (Image Text) -->
+      <div id="caption"></div>
+    </div>
+    <script>
+    // Get the modal
+    var modal = document.getElementById('myModal');
+
+    // Get the image and insert it inside the modal - use its "alt" text as a caption
+    var modalImg = document.getElementById("img01");
+    var captionText = document.getElementById("caption");
+
+    $('body').on('click','img',function(){
+        modal.style.display = "block";
+        modalImg.src = this.src;
+        captionText.innerHTML = "<a href='"+this.src+"' download><p> Download</p></a>";
+    })
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+    </script>
+{% endblock %}
