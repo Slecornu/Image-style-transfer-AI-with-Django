@@ -23,13 +23,16 @@
                             {% csrf_token %}
                             <div class="flex">
                                 <div class="form-group text-center">
-                                    <label for="id_image_one">First Image</label>
+                                    <label for="id_image_one">Content Image</label>
                                     {% render_field form.image_one  class+="form-control image-input" %}
                                     <br/>
                                     <i class="fas fa-plus"></i>
                                     <br/><br/>
-                                    <label for="id_image_two">Second Image</label>
+                                    <label for="id_image_two">Style Image</label>
                                     {% render_field form.image_two  class+="form-control image-input" %}
+                                    <br/><br/>
+                                    <label for="id_num_of_iterations">Optimisation level</label>
+                                    {% render_field form.num_of_iterations  class+="form-control" %}
                                 </div>
                             </div>
                             <br/>
@@ -41,34 +44,40 @@
                      <div class="tab-pane fade" id="nav-view-art" role="tabpanel" aria-labelledby="nav-view-art-tab">
                         <div class="row">
                             <div class="col-4 text-center">
-                                <h3>Image A</h3>
+                                <h3>Content Image</h3>
                             </div>
                             <div class="col-4 text-center">
-                                <h3>Image B</h3>
+                                <h3>Style Image</h3>
                             </div>
                             <div class="col-4 text-center">
-                                <h3>result</h3>
+                                <h3>Result</h3>
                             </div>
                         </div>
-                        {% for a in art %}
-                            <div class="row">
-                                <div class="col-4 center">
-                                    {% if a.image_one %}<img width="100%" height="auto" src="{{ a.image_one.url }}"/>{% endif %}
+                        <div id="vue">
+                            <div v-for="a in art">
+                                <div class="row">
+                                    <div class="col-4 center">
+                                        <div v-if="a.fields.image_one !== null">
+                                            <img v-bind:src="'./media/' + a.fields.image_one"  width="100%" height="auto" />
+                                        </div>
+                                    </div>
+                                    <div class="col-4 center">
+                                        <div v-if="a.fields.image_two !== null">
+                                            <img v-bind:src="'./media/' + a.fields.image_two"  width="100%" height="auto" />
+                                        </div>
+                                    </div>
+                                    <div class="col-4 center">
+                                        <div v-if="a.fields.image_output !== ''">
+                                            <img v-bind:src="'./media/' + a.fields.image_output"  width="100%" height="auto" />
+                                        </div>
+                                        <div v-else>
+                                            <img width="25%" style="position: absolute;margin: auto; top: 0;left: 0; right: 0;bottom: 0;"  height="auto" src="./static/img/loading.gif"/>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-4 center">
-                                    {% if a.image_two %}<img width="100%" height="auto" src="{{ a.image_two.url }}"/>{% endif %}
-                                </div>
-                                <div class="col-4 center">
-
-                                    {% if a.image_output %}<img width="100%" height="auto" src="{{ a.image_output.url }}"/>
-                                    {% else %}
-                                        <img width="100%" height="auto" src="{% static "img/placeholder.jpg" %}"/>
-                                    {% endif %}
-
-                                </div>
+                                <hr/>
                             </div>
-                            <hr/>
-                        {% endfor %}
+                        </div>
                      </div>
                  </div>
                 {% if form.errors %}
@@ -100,6 +109,47 @@
       <!-- Modal Caption (Image Text) -->
       <div id="caption"></div>
     </div>
+    <script>
+        $(function() {
+            const data_url= "http://127.0.0.1:8000/json";
+            const app = new Vue({
+                delimiters: ['[[', ']]'],
+                el: "#vue",
+                list:{},
+                timer:'',
+                data:{art: []},
+                created() {
+                    this.fetchEventsList();
+                    this.timer = setInterval(this.fetchEventsList, 10000)
+                },
+                methods:{
+                    fetchEventsList: function() {
+                       $.get(data_url, function (response) {
+                                console.log(response);
+                                this.art = response;
+                                received_all_images = true;
+                                console.log(typeof(this.art));
+                                for(let i = 0; i < this.art.length; i++){
+                                    let output = this.art[i].fields.image_output;
+                                    if((output.length) <= 0){
+                                        //all output images are not received
+                                        received_all_images = false;
+                                    }
+                                }
+                                if(received_all_images){
+                                    console.log("CANCEL FETCH");
+                                   this.cancelAutoUpdate();
+                                }
+                        }.bind(this));
+                    },
+                    cancelAutoUpdate: function() { clearInterval(this.timer) }
+                },
+                beforeDestroy() {
+                  clearInterval(this.timer)
+                }
+            })
+        });
+    </script>
     <script>
     // Get the modal
     var modal = document.getElementById('myModal');
